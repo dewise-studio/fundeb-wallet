@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundeb Wallet - Account & Settings</title>
+  
+  <!-- PWA Manifest & Theme Integration -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0d1527" />
+
+  <style>
+    :root {
+      --primary-dark: #0d1527;
+      --accent-green: #10b981;
+      --accent-green-light: #d1fae5;
+      --bg-light: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    [data-theme="dark"] {
+      --primary-dark: #0f172a;
+      --accent-green: #10b981;
+      --accent-green-light: rgba(16, 185, 129, 0.2);
+      --bg-light: #0b0f19;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-light); color: var(--text-main); padding-bottom: 85px; min-height: 100vh; }
+
+    /* App Header */
+    .app-header {
+      display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+      background-color: var(--card-bg); border-bottom: 1px solid var(--border-color);
+      position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .back-btn { background: none; border: none; font-size: 1.25rem; color: var(--text-main); text-decoration: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; transition: background 0.2s; }
+    .back-btn:hover { background: var(--accent-green-light); }
+    .header-title { font-size: 1.1rem; font-weight: 700; }
+
+    .pwa-install-btn {
+      background-color: var(--accent-green);
+      color: #ffffff;
+      border: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none;
+      transition: opacity 0.2s;
+    }
+    .pwa-install-btn:hover { opacity: 0.9; }
+
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+    .profile-hero {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .avatar-lg {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: var(--primary-dark); color: #ffffff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; font-weight: 700; flex-shrink: 0;
+    }
+    [data-theme="dark"] .avatar-lg { background: var(--accent-green); }
+
+    .profile-info h2 { font-size: 1.1rem; font-weight: 700; }
+    .profile-info p { font-size: 0.8rem; color: var(--text-muted); }
+
+    .card { background: var(--card-bg); padding: 16px; border-radius: 18px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
+    .menu-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 0; border-bottom: 1px solid var(--border-color);
+      text-decoration: none; color: var(--text-main); font-size: 0.9rem; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .menu-item:hover { color: var(--accent-green); }
+    .menu-item:last-child { border-bottom: none; }
+
+    /* Toggle Switch */
+    .toggle-switch { position: relative; width: 44px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background-color: var(--border-color); border-radius: 24px; cursor: pointer; transition: 0.3s; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.3s; }
+    input:checked + .slider { background-color: var(--accent-green); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .btn-logout {
+      width: 100%; padding: 14px; background: rgba(239, 68, 68, 0.1);
+      color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 12px; font-weight: 600; font-size: 0.95rem; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-logout:hover { background: rgba(239, 68, 68, 0.2); }
+
+    /* Bottom Navigation */
+    .mobile-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 62px; background-color: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 900; }
+    .bottom-nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 0.72rem; font-weight: 500; gap: 3px; }
+    .bottom-nav-item.active { color: var(--accent-green); font-weight: 700; }
+    .bottom-nav-item .icon { font-size: 1.25rem; }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="index.html" class="back-btn" title="Back to Dashboard">➔</a>
+      <span class="header-title">My Account</span>
+    </div>
+    <button id="pwa-install-btn" class="pwa-install-btn">📲 Install App</button>
+  </header>
+
+  <main class="container">
+    <div class="profile-hero">
+      <div class="avatar-lg" id="user-avatar">--</div>
+      <div class="profile-info">
+        <h2 id="user-name">Guest User</h2>
+        <p id="user-handle">Tier 3 Verified · @guest</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="menu-item">
+        <span>Dark Theme Mode</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="dark-mode-toggle" onchange="toggleTheme(this.checked)" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <a href="notification.html" class="menu-item">
+        <span>Notifications Center</span>
+        <span style="color:var(--text-muted);">➔</span>
+      </a>
+
+      <a href="transactions.html" class="menu-item">
+        <span>Statement & Reports</span>
+        <span style="color:var(--text-muted);">➔</span>
+      </a>
+    </div>
+
+    <div class="card">
+      <a href="forgot-password.html" class="menu-item">
+        <span>Security & PIN Reset</span>
+        <span style="color:var(--text-muted);">➔</span>
+      </a>
+      <a href="help.html" class="menu-item">
+        <span>Help & Support</span>
+        <span style="color:var(--text-muted);">➔</span>
+      </a>
+    </div>
+
+    <button class="btn-logout" onclick="logout()">Log Out</button>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav">
+    <a href="index.html" class="bottom-nav-item"><span class="icon">🏠</span><span>Home</span></a>
+    <a href="transfer.html" class="bottom-nav-item"><span class="icon">✈</span><span>Pay</span></a>
+    <a href="cards.html" class="bottom-nav-item"><span class="icon">💳</span><span>Cards</span></a>
+    <a href="savings.html" class="bottom-nav-item"><span class="icon">💰</span><span>Grow</span></a>
+    <a href="profile.html" class="bottom-nav-item active"><span class="icon">👤</span><span>You</span></a>
+  </nav>
+
+  <script>
+    function loadUserProfile() {
+      // 1. Theme initialization
+      const savedTheme = localStorage.getItem('jw_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('dark-mode-toggle').checked = (savedTheme === 'dark');
+
+      // 2. Auth Check & Data Retrieval
+      const activeUser = JSON.parse(localStorage.getItem('jw_active_user') || 'null');
+      const fallbackUser = JSON.parse(localStorage.getItem('jw_user_data') || 'null');
+      const userData = activeUser || fallbackUser;
+
+      if (!userData) {
+        window.location.href = 'register.html';
+        return;
+      }
+
+      // 3. Render User Details
+      const name = userData.fullName || userData.name || 'User Account';
+      const nameParts = name.trim().split(' ');
+      let initials = 'FW';
+      if (nameParts.length >= 2) {
+        initials = (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+      } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+        initials = nameParts[0].substring(0, 2).toUpperCase();
+      }
+
+      const handle = userData.email ? userData.email.split('@')[0].toLowerCase() : (userData.phone || 'user');
+
+      document.getElementById('user-name').textContent = name;
+      document.getElementById('user-avatar').textContent = initials;
+      document.getElementById('user-handle').textContent = `Tier 3 Verified · @${handle}`;
+    }
+
+    function toggleTheme(isDark) {
+      const newTheme = isDark ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('jw_theme', newTheme);
+    }
+
+    function logout() {
+      if (confirm("Are you sure you want to log out?")) {
+        localStorage.removeItem('jw_active_user');
+        localStorage.setItem('jw_logged_in', 'false');
+        window.location.href = "register.html";
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadUserProfile);
+
+    /* --- SERVICE WORKER & PWA INSTALL LOGIC --- */
+    let deferredPrompt;
+    const installBtn = document.getElementById('pwa-install-btn');
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW registered successfully:', reg.scope))
+          .catch(err => console.log('SW registration failed:', err));
+      });
+    }
+
+    // Capture PWA Install Prompt Event
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', () => {
+      installBtn.style.display = 'none';
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+        });
+      }
+    });
+  </script>
+</body>
+</html>

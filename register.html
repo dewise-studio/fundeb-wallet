@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundeb Pay Wallet - Welcome</title>
+  
+  <!-- PWA Manifest link -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0d1527" />
+
+  <style>
+    /* Reset & Fonts */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* Fullscreen Splash Overlay */
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      background-color: #0d1527;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 0.8s ease-out;
+    }
+
+    /* Slow Drop and 3-Bounce Animation for Logo (3.8s total duration) */
+    .splash-logo {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      object-fit: cover;
+      animation: dropAndBounce 3.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    /* Animated Text Underneath with Fade In, Continuous Zig-Zag, and Hover Effect */
+    .splash-title {
+      color: #ffffff;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 20px;
+      opacity: 0;
+      letter-spacing: 0.05em;
+      animation: fadeInText 1s ease forwards 2.6s, continuousZigZag 3s ease-in-out infinite 3.6s;
+      cursor: pointer;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+
+    .splash-title:hover {
+      color: #10b981;
+      transform: scale(1.1) rotate(-2deg);
+    }
+
+    @keyframes dropAndBounce {
+      0% {
+        transform: translateY(-600px);
+        opacity: 0;
+      }
+      25% {
+        transform: translateY(0); /* First center impact */
+        opacity: 1;
+      }
+      40% {
+        transform: translateY(-65px); /* First high bounce */
+      }
+      55% {
+        transform: translateY(0);
+      }
+      70% {
+        transform: translateY(-30px); /* Second medium bounce */
+      }
+      82% {
+        transform: translateY(0);
+      }
+      92% {
+        transform: translateY(-10px); /* Third soft bounce */
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInText {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Smooth Continuous Zig-Zag Floating Animation */
+    @keyframes continuousZigZag {
+      0%   { transform: translate(0, 0) rotate(0deg); }
+      25%  { transform: translate(-10px, -6px) rotate(-3deg); }
+      50%  { transform: translate(10px, -12px) rotate(3deg); }
+      75%  { transform: translate(-8px, -6px) rotate(-2deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: #ffffff;
+      padding: 28px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      border: 1px solid #e2e8f0;
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .auth-logo {
+      height: 48px;
+      width: auto;
+      margin-bottom: 12px;
+      object-fit: contain;
+    }
+
+    .auth-header h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #0d1527;
+      margin-bottom: 4px;
+    }
+
+    .auth-header p {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: #0d1527;
+    }
+
+    .password-hint {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 4px;
+      display: block;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background-color: #0d1527;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 10px;
+      background-color: transparent;
+      color: #64748b;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+      text-decoration: underline;
+    }
+
+    .btn-install {
+      background-color: #10b981;
+      color: #ffffff;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      width: 100%;
+      margin-bottom: 16px;
+      cursor: pointer;
+      display: none;
+    }
+
+    .error-msg {
+      color: #ef4444;
+      font-size: 0.8rem;
+      margin-top: 4px;
+      display: block;
+    }
+
+    .auth-footer-links {
+      text-align: center;
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .auth-footer-links a {
+      font-size: 0.85rem;
+      color: #0d1527;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* --- Animated Top OTP Toast --- */
+    .top-toast {
+      position: fixed;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 380px;
+      background: #0d1527;
+      color: #ffffff;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+      z-index: 2000;
+      transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 1px solid #10b981;
+      text-align: center;
+    }
+
+    .top-toast.show {
+      top: 20px;
+    }
+
+    .top-toast h4 {
+      font-size: 0.95rem;
+      color: #10b981;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .top-toast p {
+      font-size: 0.85rem;
+      color: #e2e8f0;
+    }
+
+    .top-toast strong {
+      font-size: 1.2rem;
+      color: #ffffff;
+      letter-spacing: 2px;
+    }
+
+    /* --- Modals --- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 21, 39, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 360px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-card h3 {
+      font-size: 1.2rem;
+      color: #0d1527;
+      margin-bottom: 6px;
+    }
+
+    .modal-card p {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .success-icon {
+      width: 56px;
+      height: 56px;
+      background-color: #d1fae5;
+      color: #10b981;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto 16px;
+      font-weight: bold;
+    }
+
+    .text-success {
+      color: #10b981;
+      font-size: 1.15rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Slow Animated Splash Overlay -->
+  <div id="splash-screen">
+    <img src="fundeb.png" alt="Fundeb Logo" class="splash-logo" />
+    <h2 class="splash-title">Fundeb Pay Wallet</h2>
+  </div>
+
+  <!-- Top Dropdown Notification Toast -->
+  <div id="otp-toast" class="top-toast">
+    <h4>Security OTP Alert</h4>
+    <p>Your verification code is: <strong id="toast-otp">123456</strong></p>
+  </div>
+
+  <!-- Main Auth Card -->
+  <div class="auth-card">
+    <button id="pwa-install-btn" class="btn-install">📲 Install Fundeb Wallet App</button>
+
+    <div class="auth-header">
+      <img src="fundeb.png" alt="Fundeb Wallet Logo" class="auth-logo" />
+      <h2 id="card-title">Create Account</h2>
+      <p id="card-subtitle">Enter your details to get started with Fundeb Wallet</p>
+    </div>
+
+    <!-- Registration Form -->
+    <form id="register-form" onsubmit="handleRegistration(event)">
+      <div class="form-group">
+        <label for="fullname">Full Name</label>
+        <input type="text" id="fullname" placeholder="e.g. Adaeze Okonkwo" required />
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number (10 Digits)</label>
+        <input type="tel" id="phone" maxlength="10" pattern="\d{10}" placeholder="e.g. 8012345678" required />
+        <small class="error-msg" id="phone-error"></small>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="e.g. Abcde@1" required />
+        <span class="password-hint">Must start with a Capital letter, contain symbol & number (e.g. Abcde@1)</span>
+        <small class="error-msg" id="password-error"></small>
+      </div>
+
+      <div class="form-group">
+        <label for="pin">4-Digit Transaction PIN</label>
+        <input type="password" id="pin" maxlength="4" pattern="\d{4}" placeholder="••••" required />
+      </div>
+
+      <button type="submit" class="btn-primary">Proceed to Verification</button>
+    </form>
+
+    <!-- Login Form -->
+    <form id="login-form" style="display: none;" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="login-phone">Phone Number</label>
+        <input type="tel" id="login-phone" maxlength="10" pattern="\d{10}" placeholder="e.g. 8012345678" required />
+      </div>
+
+      <div class="form-group">
+        <label for="login-password">Password Only</label>
+        <input type="password" id="login-password" placeholder="••••••••" required />
+        <small class="error-msg" id="login-error"></small>
+      </div>
+
+      <button type="submit" class="btn-primary">Login to Dashboard</button>
+    </form>
+
+    <div class="auth-footer-links">
+      <a id="toggle-auth-btn" onclick="toggleAuthMode()">Already registered? Login</a>
+      <a onclick="openForgotPasswordModal()">Forgot Password?</a>
+    </div>
+  </div>
+
+  <!-- Registration OTP Modal -->
+  <div id="otp-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>Enter Verification OTP</h3>
+      <p>Enter the 6-digit OTP popped up at the top of your screen:</p>
+      
+      <form id="otp-form" onsubmit="verifyOTP(event)" style="margin-top: 14px;">
+        <div class="form-group">
+          <input type="text" id="user-otp" maxlength="6" placeholder="Enter 6-digit OTP" required />
+          <small class="error-msg" id="otp-error"></small>
+        </div>
+        <button type="submit" class="btn-primary">Verify & Register</button>
+        <button type="button" id="resend-otp-btn" class="btn-secondary" onclick="resendRegistrationOTP()" style="display: none; color: #10b981;">Resend OTP</button>
+        <button type="button" class="btn-secondary" onclick="backToRegistration()">Back to Registration</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Forgot Password Step 1 -->
+  <div id="forgot-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>Reset Password</h3>
+      <p>Enter your registered 10-digit phone number to reset your password.</p>
+
+      <form id="forgot-form" onsubmit="handleForgotRequest(event)">
+        <div class="form-group" style="margin-top: 14px;">
+          <label for="forgot-phone">Phone Number</label>
+          <input type="tel" id="forgot-phone" maxlength="10" pattern="\d{10}" placeholder="e.g. 8012345678" required />
+          <small class="error-msg" id="forgot-phone-error"></small>
+        </div>
+        <button type="submit" class="btn-primary">Send Reset OTP</button>
+        <button type="button" class="btn-secondary" onclick="closeForgotPasswordModal()">Back</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Forgot Password Step 2 -->
+  <div id="forgot-otp-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>Set New Password</h3>
+      <p>Enter the OTP from the top popup and set your new password:</p>
+
+      <form id="reset-password-form" onsubmit="handlePasswordReset(event)" style="margin-top: 14px;">
+        <div class="form-group">
+          <label for="forgot-user-otp">OTP Code</label>
+          <input type="text" id="forgot-user-otp" maxlength="6" placeholder="Enter 6-digit OTP" required />
+          <small class="error-msg" id="forgot-otp-error"></small>
+        </div>
+
+        <div class="form-group">
+          <label for="new-password">New Password</label>
+          <input type="password" id="new-password" placeholder="e.g. Abcde@1" required />
+          <small class="error-msg" id="new-password-error"></small>
+        </div>
+
+        <button type="submit" class="btn-primary">Update Password</button>
+        <button type="button" id="forgot-resend-btn" class="btn-secondary" onclick="resendForgotOTP()" style="display: none; color: #10b981;">Resend OTP</button>
+        <button type="button" class="btn-secondary" onclick="closeForgotPasswordModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+  
+    <!-- Success Notification Overlay -->
+  <div id="success-overlay" class="modal-overlay hidden">
+    <div class="modal-card text-center">
+      <div class="success-icon">✓</div>
+      <h3 class="text-success" id="success-title">SUCCESSFUL</h3>
+      <p id="success-message">Redirecting to your dashboard...</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    let isLoginView = false;
+    let otpToastTimer;
+
+    // Splash Screen Dismissal Logic (Fades out smoothly after 4.2 seconds)
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) {
+          splash.style.opacity = '0';
+          setTimeout(() => {
+            splash.style.display = 'none';
+          }, 800);
+        }
+      }, 4200);
+    });
+
+    // Strict Password Validation
+    function validatePasswordFormat(password) {
+      const strictPattern = /^[A-Z](?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).+$/;
+      return strictPattern.test(password);
+    }
+
+    // Toggle between Register and Login UI
+    function toggleAuthMode() {
+      isLoginView = !isLoginView;
+      const regForm = document.getElementById('register-form');
+      const loginForm = document.getElementById('login-form');
+      const title = document.getElementById('card-title');
+      const subtitle = document.getElementById('card-subtitle');
+      const toggleBtn = document.getElementById('toggle-auth-btn');
+
+      if (isLoginView) {
+        regForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        title.textContent = 'Welcome Back';
+        subtitle.textContent = 'Enter your password to access your wallet';
+        toggleBtn.textContent = 'Need an account? Register';
+      } else {
+        regForm.style.display = 'block';
+        loginForm.style.display = 'none';
+        title.textContent = 'Create Account';
+        subtitle.textContent = 'Enter your details to get started with Fundeb Wallet';
+        toggleBtn.textContent = 'Already registered? Login';
+      }
+    }
+
+    // Displays the Top Animated Toast Notification
+    function triggerTopOTPToast(code) {
+      const toast = document.getElementById('otp-toast');
+      const toastCode = document.getElementById('toast-otp');
+      
+      toastCode.textContent = code;
+      toast.classList.add('show');
+
+      clearTimeout(otpToastTimer);
+
+      otpToastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 5000);
+    }
+
+    /* --- LOGIN SYSTEM --- */
+    function handleLogin(e) {
+      e.preventDefault();
+      const phone = document.getElementById('login-phone').value.trim();
+      const password = document.getElementById('login-password').value;
+      const loginError = document.getElementById('login-error');
+
+      const existingUsers = JSON.parse(localStorage.getItem('jw_registered_users') || '[]');
+      const targetUser = existingUsers.find(user => user.phone === phone);
+
+      if (!targetUser || targetUser.password !== password) {
+        loginError.textContent = "Invalid Phone Number or Password.";
+        return;
+      }
+
+      loginError.textContent = "";
+
+      // Store authentic session and global user state
+      sessionStorage.setItem('jw_active_session', JSON.stringify(targetUser));
+      localStorage.setItem('jw_logged_in', 'true');
+      localStorage.setItem('jw_user_data', JSON.stringify({
+        fullName: targetUser.fullname,
+        phone: targetUser.phone,
+        pin: targetUser.pin
+      }));
+
+      showSuccessState("LOGIN SUCCESSFUL", "Redirecting to your dashboard...");
+      
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 1500);
+    }
+
+    /* --- REGISTRATION WORKFLOW --- */
+    function handleRegistration(e) {
+      e.preventDefault();
+
+      const fullname = document.getElementById('fullname').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value;
+      const pin = document.getElementById('pin').value.trim();
+      
+      const phoneError = document.getElementById('phone-error');
+      const passwordError = document.getElementById('password-error');
+
+      phoneError.textContent = "";
+      passwordError.textContent = "";
+
+      if (!/^\d{10}$/.test(phone)) {
+        phoneError.textContent = "Phone number must be exactly 10 digits.";
+        return;
+      }
+
+      const existingUsers = JSON.parse(localStorage.getItem('jw_registered_users') || '[]');
+      const isAlreadyRegistered = existingUsers.some(user => user.phone === phone);
+
+      if (isAlreadyRegistered) {
+        phoneError.textContent = "This phone number is already registered. Please login instead.";
+        return;
+      }
+
+      if (!validatePasswordFormat(password)) {
+        passwordError.textContent = "Password must start with a Capital letter, include a symbol and digit (e.g. Abcde@1).";
+        return;
+      }
+
+      const pendingUser = { fullname, phone, password, pin };
+      sessionStorage.setItem('jw_pending_user', JSON.stringify(pendingUser));
+
+      sendRegistrationOTP();
+      document.getElementById('otp-modal').classList.remove('hidden');
+    }
+
+    function sendRegistrationOTP() {
+      const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      sessionStorage.setItem('jw_active_otp', generatedOTP);
+      triggerTopOTPToast(generatedOTP);
+    }
+
+    function resendRegistrationOTP() {
+      sendRegistrationOTP();
+      document.getElementById('otp-error').textContent = "";
+      document.getElementById('resend-otp-btn').style.display = 'none';
+      document.getElementById('user-otp').value = "";
+    }
+
+    function verifyOTP(e) {
+      e.preventDefault();
+
+      const inputOTP = document.getElementById('user-otp').value.trim();
+      const expectedOTP = sessionStorage.getItem('jw_active_otp');
+      const otpError = document.getElementById('otp-error');
+
+      if (inputOTP !== expectedOTP) {
+        otpError.textContent = "Incorrect OTP or code expired. Click 'Resend OTP' to request a new one.";
+        document.getElementById('resend-otp-btn').style.display = 'block';
+        return;
+      }
+
+      const pendingUser = JSON.parse(sessionStorage.getItem('jw_pending_user'));
+      const existingUsers = JSON.parse(localStorage.getItem('jw_registered_users') || '[]');
+
+      existingUsers.push(pendingUser);
+      localStorage.setItem('jw_registered_users', JSON.stringify(existingUsers));
+      
+      // Authorize active session
+      sessionStorage.setItem('jw_active_session', JSON.stringify(pendingUser));
+      localStorage.setItem('jw_logged_in', 'true');
+      localStorage.setItem('jw_user_data', JSON.stringify({
+        fullName: pendingUser.fullname,
+        phone: pendingUser.phone,
+        pin: pendingUser.pin
+      }));
+
+      sessionStorage.removeItem('jw_pending_user');
+      sessionStorage.removeItem('jw_active_otp');
+
+      document.getElementById('otp-modal').classList.add('hidden');
+      
+      showSuccessState("REGISTRATION SUCCESSFUL", "Redirecting to your dashboard...");
+      
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 2000);
+    }
+
+    function backToRegistration() {
+      sessionStorage.removeItem('jw_pending_user');
+      sessionStorage.removeItem('jw_active_otp');
+      document.getElementById('otp-modal').classList.add('hidden');
+      document.getElementById('user-otp').value = "";
+      document.getElementById('otp-error').textContent = "";
+      document.getElementById('resend-otp-btn').style.display = 'none';
+    }
+
+    /* --- FORGOT PASSWORD WORKFLOW --- */
+    function openForgotPasswordModal() {
+      document.getElementById('forgot-modal').classList.remove('hidden');
+    }
+
+    function closeForgotPasswordModal() {
+      document.getElementById('forgot-modal').classList.add('hidden');
+      document.getElementById('forgot-otp-modal').classList.add('hidden');
+      document.getElementById('forgot-phone-error').textContent = "";
+      document.getElementById('forgot-otp-error').textContent = "";
+      document.getElementById('new-password-error').textContent = "";
+      sessionStorage.removeItem('jw_reset_phone');
+      sessionStorage.removeItem('jw_reset_otp');
+    }
+
+    function handleForgotRequest(e) {
+      e.preventDefault();
+      const phone = document.getElementById('forgot-phone').value.trim();
+      const phoneError = document.getElementById('forgot-phone-error');
+
+      const existingUsers = JSON.parse(localStorage.getItem('jw_registered_users') || '[]');
+      const userExists = existingUsers.some(user => user.phone === phone);
+
+      if (!userExists) {
+        phoneError.textContent = "No account found with this phone number.";
+        return;
+      }
+
+      phoneError.textContent = "";
+      sessionStorage.setItem('jw_reset_phone', phone);
+
+      sendForgotOTP();
+      document.getElementById('forgot-modal').classList.add('hidden');
+      document.getElementById('forgot-otp-modal').classList.remove('hidden');
+    }
+
+    function sendForgotOTP() {
+      const resetOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      sessionStorage.setItem('jw_reset_otp', resetOTP);
+      triggerTopOTPToast(resetOTP);
+    }
+
+    function resendForgotOTP() {
+      sendForgotOTP();
+      document.getElementById('forgot-otp-error').textContent = "";
+      document.getElementById('forgot-resend-btn').style.display = 'none';
+      document.getElementById('forgot-user-otp').value = "";
+    }
+
+    function handlePasswordReset(e) {
+      e.preventDefault();
+      const inputOTP = document.getElementById('forgot-user-otp').value.trim();
+      const newPassword = document.getElementById('new-password').value;
+      const expectedOTP = sessionStorage.getItem('jw_reset_otp');
+      const resetPhone = sessionStorage.getItem('jw_reset_phone');
+      
+      const otpError = document.getElementById('forgot-otp-error');
+      const newPasswordError = document.getElementById('new-password-error');
+
+      otpError.textContent = "";
+      newPasswordError.textContent = "";
+
+      if (inputOTP !== expectedOTP) {
+        otpError.textContent = "Incorrect OTP. Request a new OTP if needed.";
+        document.getElementById('forgot-resend-btn').style.display = 'block';
+        return;
+      }
+
+      if (!validatePasswordFormat(newPassword)) {
+        newPasswordError.textContent = "Password must start with a Capital letter, include a symbol and digit (e.g. Abcde@1).";
+        return;
+      }
+
+      let existingUsers = JSON.parse(localStorage.getItem('jw_registered_users') || '[]');
+      existingUsers = existingUsers.map(user => {
+        if (user.phone === resetPhone) {
+          return { ...user, password: newPassword };
+        }
+        return user;
+      });
+
+      localStorage.setItem('jw_registered_users', JSON.stringify(existingUsers));
+
+      closeForgotPasswordModal();
+      showSuccessState("PASSWORD RESET SUCCESSFUL", "You can now login with your new password.");
+
+      setTimeout(() => {
+        document.getElementById('success-overlay').classList.add('hidden');
+        if (!isLoginView) toggleAuthMode();
+      }, 2000);
+    }
+
+    function showSuccessState(title, message) {
+      document.getElementById('success-title').textContent = title;
+      document.getElementById('success-message').textContent = message;
+      document.getElementById('success-overlay').classList.remove('hidden');
+    }
+
+    /* --- PWA PROMPT REGISTRATION --- */
+    let deferredPrompt;
+    const installBtn = document.getElementById('pwa-install-btn');
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (installBtn) installBtn.style.display = 'block';
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener('click', () => {
+        installBtn.style.display = 'none';
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(() => {
+            deferredPrompt = null;
+          });
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundeb Wallet - Virtual Cards</title>
+  
+  <!-- PWA Manifest & Theme Integration -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0d1527" />
+
+  <style>
+    :root {
+      --primary-dark: #0d1527;
+      --accent-green: #10b981;
+      --accent-green-light: #d1fae5;
+      --bg-light: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    [data-theme="dark"] {
+      --primary-dark: #0f172a;
+      --accent-green: #10b981;
+      --accent-green-light: rgba(16, 185, 129, 0.2);
+      --bg-light: #0b0f19;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-light); color: var(--text-main); padding-bottom: 85px; min-height: 100vh; }
+
+    /* App Header */
+    .app-header {
+      display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+      background-color: var(--card-bg); border-bottom: 1px solid var(--border-color);
+      position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .back-btn { background: none; border: none; font-size: 1.25rem; color: var(--text-main); text-decoration: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; transition: background 0.2s; }
+    .back-btn:hover { background: var(--accent-green-light); }
+    .header-title { font-size: 1.1rem; font-weight: 700; }
+
+    .pwa-install-btn {
+      background-color: var(--accent-green);
+      color: #ffffff;
+      border: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none; /* Displayed dynamically if PWA prompt is ready */
+      transition: opacity 0.2s;
+    }
+    .pwa-install-btn:hover { opacity: 0.9; }
+
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Virtual Debit Card Graphic */
+    .virtual-card {
+      background: linear-gradient(135deg, #0d1527 0%, #1e293b 100%);
+      color: #ffffff;
+      border-radius: 20px;
+      padding: 24px;
+      aspect-ratio: 1.586 / 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 12px 24px -6px rgba(0,0,0,0.3);
+      position: relative;
+      overflow: hidden;
+      transition: filter 0.3s ease, opacity 0.3s ease;
+    }
+    .virtual-card.frozen {
+      filter: grayscale(100%);
+      opacity: 0.65;
+    }
+    .frozen-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(13, 21, 39, 0.75);
+      backdrop-filter: blur(2px);
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: 2px;
+      color: #ef4444;
+      z-index: 10;
+    }
+    .virtual-card.frozen .frozen-overlay {
+      display: flex;
+    }
+
+    .card-top { display: flex; justify-content: space-between; align-items: center; }
+    .chip { width: 42px; height: 32px; background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); border-radius: 6px; }
+    .card-vendor { font-weight: 800; font-style: italic; font-size: 1.25rem; letter-spacing: 1px; }
+    .card-number { font-size: 1.25rem; letter-spacing: 3px; font-family: monospace; font-weight: 600; margin: 16px 0; }
+    .card-bottom { display: flex; justify-content: space-between; align-items: flex-end; font-size: 0.8rem; }
+    .card-label { font-size: 0.65rem; text-transform: uppercase; opacity: 0.7; display: block; margin-bottom: 2px; }
+
+    .card { background: var(--card-bg); padding: 20px; border-radius: 18px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
+    .action-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+    .action-row:last-child { border-bottom: none; }
+    .action-label { font-weight: 600; font-size: 0.9rem; }
+    
+    /* Toggle Switch */
+    .toggle-switch { position: relative; width: 44px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background-color: var(--border-color); border-radius: 24px; cursor: pointer; transition: 0.3s; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.3s; }
+    input:checked + .slider { background-color: var(--accent-green); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .btn-primary { width: 100%; padding: 14px; background: var(--primary-dark); color: #ffffff; border: none; border-radius: 12px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: opacity 0.2s; }
+    .btn-primary:hover { opacity: 0.9; }
+    [data-theme="dark"] .btn-primary { background: var(--accent-green); }
+
+    /* Bottom Navigation */
+    .mobile-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 62px; background-color: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 900; }
+    .bottom-nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 0.72rem; font-weight: 500; gap: 3px; }
+    .bottom-nav-item.active { color: var(--accent-green); font-weight: 700; }
+    .bottom-nav-item .icon { font-size: 1.25rem; }
+
+    /* Modal Overlay for Funding */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(13, 21, 39, 0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-card { background: var(--card-bg); padding: 24px; border-radius: 18px; width: 90%; max-width: 400px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-header h3 { font-size: 1.1rem; font-weight: 700; }
+    .close-modal-btn { background: none; border: none; font-size: 1.2rem; color: var(--text-main); cursor: pointer; }
+    
+    .input-field { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; background: var(--bg-light); color: var(--text-main); outline: none; margin-bottom: 16px; }
+    .input-field:focus { border-color: var(--accent-green); }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="index.html" class="back-btn" title="Back to Dashboard">➔</a>
+      <span class="header-title">Virtual Dollar Card</span>
+    </div>
+    <button id="pwa-install-btn" class="pwa-install-btn">📲 Install App</button>
+  </header>
+
+  <main class="container">
+    
+    <!-- Virtual Debit Card Graphic -->
+    <div class="virtual-card" id="virtual-card-element">
+      <div class="frozen-overlay">❄️ CARD FROZEN</div>
+      <div class="card-top">
+        <div class="chip"></div>
+        <span class="card-vendor">VISA</span>
+      </div>
+      <div>
+        <span class="card-label">Card Number</span>
+        <div class="card-number" id="card-num-display">•••• •••• •••• 4821</div>
+      </div>
+      <div class="card-bottom">
+        <div>
+          <span class="card-label">Card Holder</span>
+          <strong id="card-holder-name">BODUNRINDE J.</strong>
+        </div>
+        <div>
+          <span class="card-label">Expires / CVV</span>
+          <strong>08/28 · <span id="card-cvv">•••</span></strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toggle Actions -->
+    <div class="card">
+      <div class="action-row">
+        <div>
+          <div class="action-label">Show Card Details</div>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Reveal number & CVV code</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-details" onchange="toggleCardDetails(this.checked)" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="action-row">
+        <div>
+          <div class="action-label">Freeze Card</div>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Block all online transactions</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-freeze" onchange="toggleFreezeCard(this.checked)" />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="card">
+      <h3 style="font-size:1rem; margin-bottom:12px; font-weight: 700;">Card Actions</h3>
+      <button class="btn-primary" onclick="openFundingModal()">Fund Virtual Card ($)</button>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav">
+    <a href="index.html" class="bottom-nav-item"><span class="icon">🏠</span><span>Home</span></a>
+    <a href="transfer.html" class="bottom-nav-item"><span class="icon">✈</span><span>Pay</span></a>
+    <a href="cards.html" class="bottom-nav-item active"><span class="icon">💳</span><span>Cards</span></a>
+    <a href="savings.html" class="bottom-nav-item"><span class="icon">💰</span><span>Grow</span></a>
+    <a href="profile.html" class="bottom-nav-item"><span class="icon">👤</span><span>You</span></a>
+  </nav>
+
+  <!-- Fund Card Modal -->
+  <div id="fund-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Fund Virtual Dollar Card</h3>
+        <button class="close-modal-btn" onclick="closeFundingModal()">✕</button>
+      </div>
+      <form onsubmit="handleFundCard(event)">
+        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Amount in USD ($)</label>
+        <input type="number" id="fund-amount" class="input-field" placeholder="e.g. 50" min="5" step="1" required />
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 16px;">
+          Exchange rate: $1.00 = ₦1,500.00 (Debited from main wallet)
+        </p>
+        <button type="submit" class="btn-primary">Confirm & Pay</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function initApp() {
+      // Theme setup
+      const savedTheme = localStorage.getItem('jw_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+
+      // Cardholder name setup
+      const activeUser = JSON.parse(localStorage.getItem('jw_active_user') || '{}');
+      if (activeUser.name) {
+        document.getElementById('card-holder-name').textContent = activeUser.name.toUpperCase();
+      }
+    }
+
+    function toggleCardDetails(show) {
+      document.getElementById('card-num-display').textContent = show ? '4532 8901 2234 4821' : '•••• •••• •••• 4821';
+      document.getElementById('card-cvv').textContent = show ? '312' : '•••';
+    }
+
+    function toggleFreezeCard(frozen) {
+      const cardEl = document.getElementById('virtual-card-element');
+      if (frozen) {
+        cardEl.classList.add('frozen');
+      } else {
+        cardEl.classList.remove('frozen');
+      }
+    }
+
+    function openFundingModal() {
+      document.getElementById('fund-modal').classList.add('active');
+    }
+
+    function closeFundingModal() {
+      document.getElementById('fund-modal').classList.remove('active');
+    }
+
+    function handleFundCard(e) {
+      e.preventDefault();
+      const amount = document.getElementById('fund-amount').value;
+      alert(`Successfully added $${amount}.00 to your Virtual Card!`);
+      closeFundingModal();
+      document.getElementById('fund-amount').value = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', initApp);
+
+    /* --- SERVICE WORKER & PWA INSTALL LOGIC --- */
+    let deferredPrompt;
+    const installBtn = document.getElementById('pwa-install-btn');
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW registered successfully:', reg.scope))
+          .catch(err => console.log('SW registration failed:', err));
+      });
+    }
+
+    // Capture PWA Install Prompt Event
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', () => {
+      installBtn.style.display = 'none';
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+        });
+      }
+    });
+  </script>
+</body>
+</html>

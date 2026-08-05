@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundeb Wallet - Dashboard</title>
+
+  <!-- Web App Manifest Link -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0d1527" />
+
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --primary-dark: #0d1527;
+      --accent-green: #10b981;
+      --accent-green-light: #d1fae5;
+      --bg-light: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --drawer-bg: #0d1527;
+      --drawer-text: #94a3b8;
+      --drawer-hover: #1e293b;
+      --pill-bg: rgba(255, 255, 255, 0.15);
+    }
+
+    [data-theme="dark"] {
+      --primary-dark: #0f172a;
+      --accent-green: #10b981;
+      --accent-green-light: rgba(16, 185, 129, 0.2);
+      --bg-light: #0b0f19;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --drawer-bg: #030712;
+      --drawer-text: #94a3b8;
+      --drawer-hover: #111827;
+      --pill-bg: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      padding-bottom: 80px;
+    }
+
+    /* Toast Notification */
+    .bonus-toast {
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 560px;
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #ffffff;
+      padding: 14px 18px;
+      border-radius: 16px;
+      font-size: 0.88rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+      z-index: 1200;
+      transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .bonus-toast.show { top: 16px; }
+    .bonus-toast strong { display: block; font-size: 0.95rem; }
+
+    /* App Header */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .hamburger-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-main); }
+    .header-logo { height: 38px; width: 38px; object-fit: cover; border-radius: 50%; border: 1px solid var(--border-color); }
+    .header-right { display: flex; align-items: center; gap: 14px; }
+    .user-greeting { font-weight: 600; color: var(--text-main); font-size: 0.95rem; }
+
+    .icon-btn {
+      text-decoration: none;
+      position: relative;
+      font-size: 1.3rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      background-color: #ef4444;
+      border-radius: 50%;
+      border: 2px solid var(--card-bg);
+      display: none;
+    }
+
+    .notif-badge.active { display: block; }
+
+    .user-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background-color: var(--primary-dark);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    /* Side Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      backdrop-filter: blur(2px);
+    }
+
+    .drawer-overlay.hidden { display: none; }
+
+    .side-drawer {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100vh;
+      background-color: var(--drawer-bg);
+      z-index: 1000;
+      transition: left 0.3s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .side-drawer.open { left: 0; }
+    .drawer-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 16px; border-bottom: 1px solid #1e293b; }
+    .drawer-logo { height: 36px; width: 36px; border-radius: 50%; object-fit: cover; }
+    .close-btn { background: none; border: none; color: #ffffff; font-size: 1.5rem; cursor: pointer; }
+    .drawer-nav { padding: 12px 0; flex: 1; }
+    .group-label { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: #475569; padding: 1.25rem 1.5rem 0.5rem; }
+    .nav-item { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; color: var(--drawer-text); text-decoration: none; font-size: 0.95rem; }
+    .nav-item:hover, .nav-item.active { background-color: var(--drawer-hover); color: #ffffff; }
+    .theme-switch-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; cursor: pointer; }
+    .logout-btn { background: none; border: none; width: 100%; text-align: left; cursor: pointer; color: #ef4444 !important; padding: 1.25rem 1.5rem; }
+
+    /* Unified Dashboard Layout */
+    .dashboard-container {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Balance Hero Card */
+    .balance-card {
+      background: linear-gradient(135deg, #0d1527 0%, #1e293b 100%);
+      color: #ffffff;
+      padding: 18px 20px;
+      border-radius: 20px;
+      box-shadow: 0 12px 24px -6px rgba(13, 21, 39, 0.3);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .balance-header-top { display: flex; justify-content: space-between; align-items: center; }
+    .balance-label { font-size: 0.8rem; color: #94a3b8; font-weight: 500; }
+    .eye-toggle-btn { background: var(--pill-bg); border: none; color: #cbd5e1; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-size: 0.75rem; }
+    .balance-amount { font-size: 1.85rem; font-weight: 800; margin: 6px 0 2px; letter-spacing: -0.02em; }
+    
+    .account-copy-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #e2e8f0;
+      cursor: pointer;
+      margin-bottom: 16px;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+    }
+
+    .quick-actions-circle { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .circle-action-item { display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: #ffffff; background: none; border: none; cursor: pointer; }
+    .circle-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); display: flex; align-items: center; justify-content: center; font-size: 1.05rem; }
+    .circle-btn.highlight { background: var(--accent-green); color: #ffffff; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); }
+    .circle-label { font-size: 0.72rem; font-weight: 600; color: #e2e8f0; text-align: center; }
+
+    /* Dashboard Sections */
+    .dashboard-section {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .section-header { display: flex; justify-content: space-between; align-items: center; }
+    .dashboard-section h3 { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+    .link-green { color: var(--accent-green); font-size: 0.82rem; text-decoration: none; font-weight: 600; }
+
+    /* Quick Send Beneficiaries */
+    .beneficiaries-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 8px 0 2px; scrollbar-width: none; }
+    .beneficiaries-scroll::-webkit-scrollbar { display: none; }
+    .ben-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex-shrink: 0; }
+    .ben-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--accent-green-light); color: var(--accent-green); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; border: 1px solid var(--border-color); }
+    .ben-name { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; max-width: 58px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+
+    /* Monthly Spend Breakdown */
+    .analytics-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .analytics-row { display: flex; flex-direction: column; gap: 4px; }
+    .analytics-meta { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
+    .analytics-track { width: 100%; height: 6px; background: var(--border-color); border-radius: 4px; overflow: hidden; }
+    .analytics-fill { height: 100%; border-radius: 4px; }
+
+    /* Savings Cards */
+    .savings-list-container { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .savings-item-card { background: var(--bg-light); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 12px; }
+    .savings-item-header { display: flex; justify-content: space-between; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
+    .progress-bar-bg { width: 100%; height: 6px; background-color: var(--border-color); border-radius: 4px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background-color: var(--accent-green); border-radius: 4px; }
+
+    /* Recent Transactions List */
+    .transaction-list { display: flex; flex-direction: column; gap: 10px; }
+    .transaction-item { display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); }
+    .tx-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-light); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; border: 1px solid var(--border-color); }
+    .tx-avatar.bg-emerald-light { background: var(--accent-green-light); color: var(--accent-green); }
+    .tx-details { flex: 1; margin-left: 10px; }
+    .tx-title { display: block; font-weight: 600; font-size: 0.85rem; }
+    .tx-sub { font-size: 0.72rem; color: var(--text-muted); }
+    .tx-amount { font-size: 0.85rem; font-weight: 700; }
+    .tx-amount.negative { color: var(--text-main); }
+    .tx-amount.positive { color: var(--accent-green); }
+
+    /* Modals */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(13, 21, 39, 0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 16px; }
+    .modal-overlay.hidden { display: none; }
+    .modal-card { background: var(--card-bg); color: var(--text-main); padding: 22px; border-radius: 18px; width: 100%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); }
+    .modal-card h3 { font-size: 1.1rem; margin-bottom: 14px; color: var(--text-main); }
+    .fee-notice { background: var(--bg-light); border: 1px dashed var(--border-color); padding: 8px 10px; border-radius: 8px; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; color: var(--text-muted); }
+    .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.88rem; outline: none; background: var(--bg-light); color: var(--text-main); }
+    .pin-input-container { display: flex; justify-content: center; gap: 10px; margin: 16px 0; }
+    .pin-digit { width: 44px; height: 44px; text-align: center; font-size: 1.3rem; font-weight: 700; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-main); }
+    .btn-primary { width: 100%; padding: 12px; background: var(--primary-dark); color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+    [data-theme="dark"] .btn-primary { background: var(--accent-green); }
+    .btn-cancel { width: 100%; padding: 8px; background: none; border: none; color: var(--text-muted); cursor: pointer; margin-top: 4px; font-size: 0.82rem; }
+
+    /* Bottom Navigation Bar */
+    .mobile-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 58px; background-color: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 900; }
+    .bottom-nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-muted); font-size: 0.7rem; font-weight: 500; gap: 2px; }
+    .bottom-nav-item.active { color: var(--text-main); font-weight: 700; }
+    .bottom-nav-item .icon { font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Notification -->
+  <div id="bonus-toast" class="bonus-toast">
+    <div>
+      <strong id="toast-title">Savings Growth Bonus</strong>
+      <span id="toast-msg">₦50 has been added to your House Savings</span>
+    </div>
+    <span style="font-size:1.1rem;">🎉</span>
+  </div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <button class="hamburger-btn" onclick="toggleDrawer()">☰</button>
+      <img src="fundeb.png" alt="Logo" class="header-logo" />
+    </div>
+    <div class="header-right">
+      <span id="user-greeting" class="user-greeting">Good day!</span>
+      <a href="notification.html" class="icon-btn" id="notif-bell-link">
+        🔔 <span id="notif-dot" class="notif-badge"></span>
+      </a>
+      <div id="user-avatar" class="user-avatar">U</div>
+    </div>
+  </header>
+
+  <!-- Side Drawer -->
+  <div id="drawer-overlay" class="drawer-overlay hidden" onclick="toggleDrawer()"></div>
+  <aside id="side-drawer" class="side-drawer">
+    <div class="drawer-header">
+      <img src="fundeb.png" alt="Logo" class="drawer-logo" />
+      <button class="close-btn" onclick="toggleDrawer()">&times;</button>
+    </div>
+    <nav class="drawer-nav">
+      <div class="nav-group">
+        <span class="group-label">OVERVIEW</span>
+        <a href="index.html" class="nav-item active">📊 Dashboard</a>
+        <div class="nav-item">
+          <span>🌙 Dark Mode</span>
+          <button class="theme-switch-btn" onclick="toggleTheme()">Toggle</button>
+        </div>
+      </div>
+      <div class="nav-group">
+        <span class="group-label">MOVE MONEY</span>
+        <a href="transfer.html" class="nav-item">✈ Send Money</a>
+        <a href="transactions.html" class="nav-item">📑 Pay Bills</a>
+      </div>
+      <div class="nav-group">
+        <span class="group-label">GROW</span>
+        <a href="savings.html" class="nav-item">💰 Savings & Grow</a>
+      </div>
+      <div class="nav-group">
+        <span class="group-label">MANAGE</span>
+        <a href="profile.html" class="nav-item">👤 Accounts</a>
+        <a href="cards.html" class="nav-item">💳 Cards</a>
+        <a href="transactions.html" class="nav-item">🧾 Transactions</a>
+      </div>
+      <div style="margin-top: auto;">
+        <button onclick="logoutUser()" class="nav-item logout-btn">🚪 Sign out</button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Single Dashboard Container -->
+  <main class="dashboard-container">
+    <section class="balance-card">
+      <div class="balance-header-top">
+        <span class="balance-label">Total balance (NGN account)</span>
+        <button class="eye-toggle-btn" onclick="toggleBalanceVisibility()">
+          <span id="eye-text">Hide</span>
+        </button>
+      </div>
+      <h1 class="balance-amount" id="balance-display">₦4,837,400.00</h1>
+      
+      <div class="account-copy-pill" onclick="copyAccountNumber()">
+        <span>Main NGN • 0123454829</span>
+        <span>📋</span>
+      </div>
+
+      <div class="quick-actions-circle">
+        <button class="circle-action-item" onclick="openTransferModal()">
+          <div class="circle-btn highlight">✈</div>
+          <span class="circle-label">Send</span>
+        </button>
+        <button class="circle-action-item" onclick="openBillModal('Electricity / Utility')">
+          <div class="circle-btn">📑</div>
+          <span class="circle-label">Pay bill</span>
+        </button>
+        <button class="circle-action-item" onclick="openSavingsModal()">
+          <div class="circle-btn">💰</div>
+          <span class="circle-label">Savings</span>
+        </button>
+        <button class="circle-action-item" onclick="addMoneyPrompt()">
+          <div class="circle-btn">+</div>
+          <span class="circle-label">Add money</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Beneficiaries -->
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h3 style="margin:0;">Quick Send</h3>
+        <a href="transfer.html" class="link-green">New Transfer ➔</a>
+      </div>
+      <div class="beneficiaries-scroll" id="beneficiaries-list"></div>
+    </section>
+
+    <!-- Analytics -->
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h3 style="margin:0;">Monthly Spend Breakdown</h3>
+      </div>
+      <div class="analytics-grid" id="analytics-container"></div>
+    </section>
+
+    <!-- Savings -->
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h3 style="margin: 0;">Savings Goals</h3>
+        <a href="savings.html" class="link-green">View All ➔</a>
+      </div>
+      <div class="savings-list-container" id="dashboard-savings-container"></div>
+    </section>
+
+    <!-- Recent Transactions -->
+    <section class="dashboard-section">
+      <div class="section-header" style="margin-bottom: 12px;">
+        <h3 style="margin: 0;">Recent transactions</h3>
+        <a href="transactions.html" class="link-green">View all</a>
+      </div>
+      <div class="transaction-list" id="transaction-container"></div>
+    </section>
+  </main>
+
+  <!-- Modals -->
+  <div id="transfer-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>Bank Transfer</h3>
+      <div class="fee-notice">
+        <span>Transfer Fee:</span>
+        <strong style="color:var(--accent-green);">₦10.00</strong>
+      </div>
+      <form onsubmit="initiateTransferWithPin(event)">
+        <div class="form-group">
+          <label>Select Destination Bank</label>
+          <select id="transfer-bank" required>
+            <option value="">Select Bank...</option>
+            <option value="GTBank">Guaranty Trust Bank (GTB)</option>
+            <option value="Access Bank">Access Bank</option>
+            <option value="Zenith Bank">Zenith Bank</option>
+            <option value="First Bank">First Bank Nigeria</option>
+            <option value="Kuda Bank">Kuda Microfinance Bank</option>
+            <option value="OPay">OPay Digital Services</option>
+            <option value="Palmpay">Palmpay</option>
+            <option value="UBA">United Bank for Africa (UBA)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Account Number (10 digits)</label>
+          <input type="text" id="transfer-acc-num" placeholder="0123456789" maxlength="10" pattern="\d{10}" required />
+        </div>
+        <div class="form-group">
+          <label>Receiver Name</label>
+          <input type="text" id="transfer-acc-name" placeholder="e.g. John Doe" required />
+        </div>
+        <div class="form-group">
+          <label>Amount (₦)</label>
+          <input type="number" id="transfer-amount" placeholder="0.00" min="10" required />
+        </div>
+        <button type="submit" class="btn-primary">Continue</button>
+        <button type="button" class="btn-cancel" onclick="closeTransferModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="pin-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="text-align: center;">
+      <h3>Enter 4-Digit PIN</h3>
+      <p style="font-size:0.83rem; color:var(--text-muted);">Confirm transaction security PIN</p>
+      <div class="pin-input-container">
+        <input type="password" maxlength="1" class="pin-digit" oninput="focusNextPin(this, 1)" />
+        <input type="password" maxlength="1" class="pin-digit" oninput="focusNextPin(this, 2)" />
+        <input type="password" maxlength="1" class="pin-digit" oninput="focusNextPin(this, 3)" />
+        <input type="password" maxlength="1" class="pin-digit" oninput="focusNextPin(this, 4)" />
+      </div>
+      <button type="button" onclick="confirmPinAndExecute()" class="btn-primary">Authorize Payment</button>
+      <button type="button" class="btn-cancel" onclick="closePinModal()">Cancel</button>
+    </div>
+  </div>
+
+  <div id="savings-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>Save Money & Set Goals</h3>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Earn +₦50 bonus per ₦1,000 saved!</p>
+      <form onsubmit="processSavingsDeposit(event)">
+        <div class="form-group">
+          <label>Savings Target Name</label>
+          <input type="text" id="savings-title-input" placeholder="e.g. House, Rent" required />
+        </div>
+        <div class="form-group">
+          <label>Amount to Save (₦)</label>
+          <input type="number" id="savings-amount-input" placeholder="e.g. 10000" min="100" required />
+        </div>
+        <button type="submit" class="btn-primary">Deposit & Save</button>
+        <button type="button" class="btn-cancel" onclick="closeSavingsModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="bill-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3 id="bill-modal-title">Pay Bill</h3>
+      <form onsubmit="processBillPurchase(event)">
+        <div class="form-group">
+          <label>Service Provider</label>
+          <select id="bill-provider" required>
+            <option value="MTN Airtime">MTN Airtime</option>
+            <option value="MTN Data Bundle">MTN Data Bundle</option>
+            <option value="Airtel Airtime">Airtel Airtime</option>
+            <option value="Glo Data Bundle">Glo Data Bundle</option>
+            <option value="IKEDC Electricity">IKEDC Electricity</option>
+            <option value="DSTV Subscription">DSTV Subscription</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Phone / Smartcard / Meter Number</label>
+          <input type="tel" id="bill-target-acc" placeholder="e.g. 08012345678" required />
+        </div>
+        <div class="form-group">
+          <label>Amount (₦)</label>
+          <input type="number" id="bill-amount" placeholder="0.00" min="50" required />
+        </div>
+        <button type="submit" class="btn-primary">Confirm Purchase</button>
+        <button type="button" class="btn-cancel" onclick="closeBillModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Bottom Nav -->
+  <nav class="mobile-bottom-nav">
+    <a href="index.html" class="bottom-nav-item active"><span class="icon">🏠</span><span>Home</span></a>
+    <a href="transfer.html" class="bottom-nav-item"><span class="icon">✈</span><span>Pay</span></a>
+    <a href="cards.html" class="bottom-nav-item"><span class="icon">💳</span><span>Cards</span></a>
+    <a href="savings.html" class="bottom-nav-item"><span class="icon">💰</span><span>Grow</span></a>
+    <a href="profile.html" class="bottom-nav-item"><span class="icon">👤</span><span>You</span></a>
+  </nav>
+
+ <!-- Script Section -->
+  <script>
+    let currentBalance = 4837400.00;
+    let isBalanceHidden = false;
+    const TRANSFER_CHARGE = 10.00;
+    let pendingAction = null;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.error(err));
+      });
+    }
+
+    function checkAuthGuard() {
+      const activeSession = sessionStorage.getItem('jw_active_session');
+      const isLoggedIn = localStorage.getItem('jw_logged_in') === 'true';
+      
+      if (!activeSession || !isLoggedIn) {
+        window.location.href = 'register.html';
+      }
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('jw_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('jw_theme', next);
+    }
+
+    function fireConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 80, spread: 60, origin: { y: 0.2 } });
+      }
+    }
+
+    function triggerPopUpNotification(title, message, triggerConfetti = false) {
+      const toast = document.getElementById('bonus-toast');
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-msg').textContent = message;
+      toast.classList.add('show');
+      if (triggerConfetti) fireConfetti();
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    function addNotification(title, message, icon = '🔔') {
+      const notifs = JSON.parse(localStorage.getItem('jw_notifications_list')) || [];
+      notifs.unshift({ id: Date.now(), title, message, time: 'Just now', icon, read: false });
+      localStorage.setItem('jw_notifications_list', JSON.stringify(notifs));
+      localStorage.setItem('jw_has_unread_notif', 'true');
+      checkNotificationBadge();
+    }
+
+    function copyAccountNumber() {
+      navigator.clipboard.writeText("0123454829");
+      triggerPopUpNotification("Account Number Copied", "0123454829 copied to clipboard!");
+    }
+
+    function getTimeBasedGreeting() {
+      const hour = new Date().getHours();
+      if (hour < 12) return "Good Morning";
+      if (hour < 17) return "Good Afternoon";
+      return "Good Evening";
+    }
+
+    function loadUserData() {
+      checkAuthGuard();
+      initTheme();
+      
+      let activeUser = null;
+      try {
+        activeUser = JSON.parse(sessionStorage.getItem('jw_active_session')) || JSON.parse(localStorage.getItem('jw_user_data'));
+      } catch(e) {
+        console.error("Invalid user data format", e);
+      }
+
+      const greeting = getTimeBasedGreeting();
+      
+      if (activeUser && (activeUser.fullname || activeUser.fullName || activeUser.name)) {
+        const fullName = activeUser.fullname || activeUser.fullName || activeUser.name;
+        const firstName = fullName.trim().split(' ')[0];
+        
+        document.getElementById('user-greeting').textContent = `${greeting}, ${firstName}!`;
+        document.getElementById('user-avatar').textContent = firstName.charAt(0).toUpperCase();
+      } else {
+        document.getElementById('user-greeting').textContent = `${greeting}!`;
+      }
+
+      const savedBalance = localStorage.getItem('jw_user_balance');
+      if (savedBalance !== null && !isNaN(parseFloat(savedBalance))) {
+        currentBalance = parseFloat(savedBalance);
+      } else {
+        localStorage.setItem('jw_user_balance', currentBalance);
+      }
+
+      checkNotificationBadge();
+      updateBalanceDisplay();
+      renderBeneficiaries();
+      renderAnalytics();
+      renderTransactions();
+      renderSavingsGoals();
+    }
+
+    function checkNotificationBadge() {
+      const hasUnread = localStorage.getItem('jw_has_unread_notif');
+      const badge = document.getElementById('notif-dot');
+      if (hasUnread === 'true') badge.classList.add('active');
+      else badge.classList.remove('active');
+    }
+
+    function renderBeneficiaries() {
+      const beneficiaries = [
+        { name: "Adebayo", bank: "GTBank", acc: "0123456789" },
+        { name: "Blessing", bank: "Kuda Bank", acc: "9876543210" },
+        { name: "Chidi", bank: "OPay", acc: "8012345678" }
+      ];
+      const container = document.getElementById('beneficiaries-list');
+      container.innerHTML = beneficiaries.map(b => `
+        <div class="ben-item" onclick="quickFillBeneficiary('${b.name}', '${b.bank}', '${b.acc}')">
+          <div class="ben-avatar">${b.name.charAt(0)}</div>
+          <span class="ben-name">${b.name}</span>
+        </div>
+      `).join('');
+    }
+
+    function quickFillBeneficiary(name, bank, acc) {
+      openTransferModal();
+      document.getElementById('transfer-bank').value = bank;
+      document.getElementById('transfer-acc-num').value = acc;
+      document.getElementById('transfer-acc-name').value = name;
+    }
+
+    function renderAnalytics() {
+      const categories = [
+        { name: "Transfers", pct: 55, color: "#ef4444" },
+        { name: "Savings", pct: 30, color: "#10b981" },
+        { name: "Bills", pct: 15, color: "#3b82f6" }
+      ];
+      const container = document.getElementById('analytics-container');
+      container.innerHTML = categories.map(c => `
+        <div class="analytics-row">
+          <div class="analytics-meta"><span>${c.name}</span><span>${c.pct}%</span></div>
+          <div class="analytics-track"><div class="analytics-fill" style="width: ${c.pct}%; background-color: ${c.color};"></div></div>
+        </div>
+      `).join('');
+    }
+
+    function getSavingsGoals() {
+      let goals = JSON.parse(localStorage.getItem('jw_savings_goals'));
+      if (!goals || goals.length === 0) {
+        goals = [{ title: 'House', current: 5000, target: 500000 }, { title: 'Rent', current: 10000, target: 200000 }];
+        localStorage.setItem('jw_savings_goals', JSON.stringify(goals));
+      }
+      return goals;
+    }
+
+    function renderSavingsGoals() {
+      const goals = getSavingsGoals();
+      const container = document.getElementById('dashboard-savings-container');
+      container.innerHTML = goals.map(goal => {
+        const percent = Math.min(100, Math.round((goal.current / goal.target) * 100));
+        return `
+          <div class="savings-item-card">
+            <div class="savings-item-header"><span>For ${goal.title}</span><strong style="color:var(--accent-green);">₦${goal.current.toLocaleString()}</strong></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${percent}%;"></div></div>
+            <p style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">Goal: ₦${goal.target.toLocaleString()} (${percent}% completed)</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openSavingsModal() { document.getElementById('savings-modal').classList.remove('hidden'); }
+    function closeSavingsModal() { document.getElementById('savings-modal').classList.add('hidden'); }
+
+    function processSavingsDeposit(e) {
+      e.preventDefault();
+      const title = document.getElementById('savings-title-input').value.trim();
+      const amount = parseFloat(document.getElementById('savings-amount-input').value);
+
+      if (amount > currentBalance) { alert("Insufficient balance!"); return; }
+
+      currentBalance -= amount;
+      localStorage.setItem('jw_user_balance', currentBalance);
+      updateBalanceDisplay();
+
+      let goals = getSavingsGoals();
+      let existingGoal = goals.find(g => g.title.toLowerCase() === title.toLowerCase());
+      if (existingGoal) existingGoal.current += amount;
+      else goals.push({ title, current: amount, target: amount * 10 });
+
+      localStorage.setItem('jw_savings_goals', JSON.stringify(goals));
+      saveTransaction(`Saved: ${title}`, 'Savings', -amount, 'SV');
+      addNotification('Savings Plan Updated', `You deposited ₦${amount.toLocaleString()} into ${title}.`, '💰');
+
+      closeSavingsModal();
+      renderSavingsGoals();
+
+      const bonusEarned = Math.floor(amount / 1000) * 50;
+      if (bonusEarned > 0) triggerPopUpNotification("Bonus Earned!", `₦${bonusEarned} added to your ${title} Savings`, true);
+      else triggerPopUpNotification("Savings Updated", `₦${amount.toLocaleString()} saved to ${title}`);
+    }
+
+    function toggleBalanceVisibility() {
+      isBalanceHidden = !isBalanceHidden;
+      document.getElementById('eye-text').textContent = isBalanceHidden ? "Show" : "Hide";
+      updateBalanceDisplay();
+    }
+
+    function updateBalanceDisplay() {
+      const display = document.getElementById('balance-display');
+      display.textContent = isBalanceHidden ? "••••••••" : currentBalance.toLocaleString('en-NG', { style: 'currency', currency: 'NGN' });
+    }
+
+    function toggleDrawer() {
+      document.getElementById('side-drawer').classList.toggle('open');
+      document.getElementById('drawer-overlay').classList.toggle('hidden');
+    }
+
+    function openTransferModal() { document.getElementById('transfer-modal').classList.remove('hidden'); }
+    function closeTransferModal() { document.getElementById('transfer-modal').classList.add('hidden'); }
+    function openBillModal(title) {
+      document.getElementById('bill-modal-title').textContent = `Purchase ${title}`;
+      document.getElementById('bill-modal').classList.remove('hidden');
+    }
+    function closeBillModal() { document.getElementById('bill-modal').classList.add('hidden'); }
+
+    function openPinModal(onSuccess) {
+      pendingAction = onSuccess;
+      document.querySelectorAll('.pin-digit').forEach(i => i.value = '');
+      document.getElementById('pin-modal').classList.remove('hidden');
+    }
+
+    function closePinModal() {
+      document.getElementById('pin-modal').classList.add('hidden');
+    }
+
+    function focusNextPin(elem, index) {
+      if (elem.value.length >= 1 && index < 4) {
+        document.querySelectorAll('.pin-digit')[index].focus();
+      }
+    }
+
+    function confirmPinAndExecute() {
+      const inputs = document.querySelectorAll('.pin-digit');
+      let pin = "";
+      inputs.forEach(i => pin += i.value);
+      
+      const activeUser = JSON.parse(sessionStorage.getItem('jw_active_session')) || JSON.parse(localStorage.getItem('jw_user_data'));
+
+      if (pin.length < 4) { alert("Please enter a valid 4-digit PIN."); return; }
+      if (activeUser && activeUser.pin && activeUser.pin !== pin) { alert("Incorrect Security PIN."); return; }
+
+      closePinModal();
+      if (typeof pendingAction === 'function') {
+        const action = pendingAction;
+        pendingAction = null;
+        action();
+      }
+    }
+
+    function initiateTransferWithPin(e) {
+      e.preventDefault();
+      closeTransferModal();
+      openPinModal(executeBankTransfer);
+    }
+
+    function executeBankTransfer() {
+      const bank = document.getElementById('transfer-bank').value;
+      const accNum = document.getElementById('transfer-acc-num').value.trim();
+      const accName = document.getElementById('transfer-acc-name').value.trim();
+      const amount = parseFloat(document.getElementById('transfer-amount').value);
+      const totalDeduction = amount + TRANSFER_CHARGE;
+
+      if (totalDeduction > currentBalance) { alert("Insufficient Balance!"); return; }
+
+      currentBalance -= totalDeduction;
+      localStorage.setItem('jw_user_balance', currentBalance);
+      updateBalanceDisplay();
+
+      saveTransaction(`Transfer to ${accName} (${bank})`, 'Transfer', -totalDeduction, accName.substring(0, 2).toUpperCase());
+      localStorage.setItem('jw_last_transfer', JSON.stringify({ bank, accNum, accName, amount, fee: TRANSFER_CHARGE, date: new Date().toLocaleString() }));
+      addNotification('Transfer Successful', `You transferred ₦${amount.toLocaleString()} to ${accName} (${bank}).`, '✈');
+
+      window.location.href = 'transfer-success.html';
+    }
+
+    function processBillPurchase(e) {
+      e.preventDefault();
+      
+      const provider = document.getElementById('bill-provider').value;
+      const target = document.getElementById('bill-target-acc').value;
+      const amount = parseFloat(document.getElementById('bill-amount').value);
+
+      if (amount > currentBalance) { 
+        alert("Insufficient balance."); 
+        return; 
+      }
+
+      closeBillModal();
+      
+      openPinModal(() => {
+        executeBillPayment(provider, target, amount);
+      });
+    }
+
+    function executeBillPayment(provider, target, amount) {
+      currentBalance -= amount;
+      localStorage.setItem('jw_user_balance', currentBalance);
+      updateBalanceDisplay();
+
+      const shortAvatar = provider.substring(0, 2).toUpperCase();
+      saveTransaction(`${provider} - ${target}`, 'Bills', -amount, shortAvatar);
+      
+      localStorage.setItem('jw_last_transfer', JSON.stringify({ 
+        bank: provider, 
+        accNum: target, 
+        accName: provider, 
+        amount: amount, 
+        fee: 0, 
+        date: new Date().toLocaleString() 
+      }));
+
+      addNotification('Bill Payment Successful', `Payment of ₦${amount.toLocaleString()} for ${provider} was successful.`, '📑');
+      triggerPopUpNotification('Transaction Successful', `₦${amount.toLocaleString()} spent on ${provider}`, true);
+
+      setTimeout(() => {
+        window.location.href = 'transfer-success.html';
+      }, 1500);
+    }
+
+    function getStoredTransactions() {
+      let txs = JSON.parse(localStorage.getItem('jw_transactions_list'));
+      if (!txs || txs.length === 0) {
+        txs = [
+          { title: 'Ade Transfer', category: 'Transfer', amount: -15000, time: '10m ago', avatar: 'A', type: 'negative' },
+          { title: 'Paystack Settlement', category: 'Business', amount: 1200000, time: 'Yesterday', avatar: 'PS', type: 'positive' }
+        ];
+        localStorage.setItem('jw_transactions_list', JSON.stringify(txs));
+      }
+      return txs;
+    }
+
+    function saveTransaction(title, category, amount, avatar = 'TX') {
+      const txs = getStoredTransactions();
+      txs.unshift({ title, category, amount, time: 'Just now', avatar, type: amount > 0 ? 'positive' : 'negative' });
+      localStorage.setItem('jw_transactions_list', JSON.stringify(txs));
+      renderTransactions();
+    }
+
+    function renderTransactions() {
+      const txs = getStoredTransactions();
+      const container = document.getElementById('transaction-container');
+      container.innerHTML = txs.slice(0, 4).map(tx => {
+        const isPos = tx.amount > 0;
+        return `
+          <div class="transaction-item">
+            <div class="tx-avatar ${isPos ? 'bg-emerald-light' : ''}">${tx.avatar}</div>
+            <div class="tx-details">
+              <span class="tx-title">${tx.title}</span>
+              <span class="tx-sub">${tx.time} · ${tx.category}</span>
+            </div>
+            <span class="tx-amount ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : '-'}₦${Math.abs(tx.amount).toLocaleString('en-NG', {minimumFractionDigits: 2})}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addMoneyPrompt() {
+      const amount = prompt("Enter amount to add to wallet (₦):", "50000");
+      if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        const added = parseFloat(amount);
+        currentBalance += added;
+        localStorage.setItem('jw_user_balance', currentBalance);
+        updateBalanceDisplay();
+        saveTransaction('Wallet Deposit', 'Top-Up', added, 'DP');
+        addNotification('Wallet Top-Up', `Your account was credited with ₦${added.toLocaleString()}.`, '💳');
+        triggerPopUpNotification('Top-Up Successful', `₦${added.toLocaleString()} added to main balance!`, true);
+      }
+    }
+    
+    function logoutUser() {
+      localStorage.setItem('jw_logged_in', 'false');
+      sessionStorage.removeItem('jw_active_session');
+      window.location.href = 'register.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', loadUserData);
+  </script>
+
+</body>
+</html>

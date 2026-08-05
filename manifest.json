@@ -1,0 +1,23 @@
+{
+  "short_name": "Fundeb",
+  "name": "Fundeb Wallet",
+  "icons": [
+    {
+      "src": "fundeb.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "fundeb.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0d1527",
+  "theme_color": "#0d1527",
+  "display": "standalone",
+  "orientation": "portrait"
+}

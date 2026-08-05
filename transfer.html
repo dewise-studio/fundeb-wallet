@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundeb Wallet - Transfer Money</title>
+
+  <style>
+    :root {
+      --primary-dark: #0d1527;
+      --accent-green: #10b981;
+      --accent-green-light: #d1fae5;
+      --bg-light: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+    }
+
+    [data-theme="dark"] {
+      --primary-dark: #0f172a;
+      --accent-green: #10b981;
+      --accent-green-light: rgba(16, 185, 129, 0.2);
+      --bg-light: #0b0f19;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      padding-bottom: 80px;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--text-main);
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 18px;
+      border: 1px solid var(--border-color);
+    }
+
+    .fee-notice {
+      background: var(--bg-light);
+      border: 1px dashed var(--border-color);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .beneficiaries-section {
+      margin-bottom: 16px;
+    }
+
+    .beneficiaries-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .beneficiary-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .chip-btn {
+      background: var(--bg-light);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      color: var(--text-main);
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.2s ease;
+    }
+
+    .chip-btn:hover {
+      border-color: var(--accent-green);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      background: var(--bg-light);
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary-dark);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    [data-theme="dark"] .btn-primary {
+      background: var(--accent-green);
+    }
+
+    /* Modal Overlay & Pin Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 21, 39, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    .modal-overlay.hidden { display: none; }
+
+    .modal-card {
+      background: var(--card-bg);
+      color: var(--text-main);
+      padding: 24px;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+    }
+
+    .pin-input-container {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .pin-digit {
+      width: 48px;
+      height: 48px;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-light);
+      color: var(--text-main);
+    }
+
+    .btn-cancel {
+      width: 100%;
+      padding: 10px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      margin-top: 6px;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <a href="index.html" class="back-btn" aria-label="Go back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    </a>
+    <span class="header-title">Send Money</span>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div class="fee-notice">
+        <span>Transfer Fee</span>
+        <strong style="color:var(--accent-green);">₦10.00</strong>
+      </div>
+
+      <!-- Quick Beneficiaries Container -->
+      <div id="beneficiaries-box" class="beneficiaries-section" style="display: none;">
+        <div class="beneficiaries-title">Saved Beneficiaries</div>
+        <div id="beneficiaries-list" class="beneficiary-chips">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <form onsubmit="initiateTransfer(event)">
+        <div class="form-group">
+          <label>Destination Bank</label>
+          <select id="transfer-bank" required>
+            <option value="">Select Bank...</option>
+            <option value="GTBank">Guaranty Trust Bank (GTB)</option>
+            <option value="Access Bank">Access Bank</option>
+            <option value="Zenith Bank">Zenith Bank</option>
+            <option value="First Bank">First Bank Nigeria</option>
+            <option value="Kuda Bank">Kuda Microfinance Bank</option>
+            <option value="OPay">OPay Digital Services</option>
+            <option value="Palmpay">Palmpay</option>
+            <option value="UBA">United Bank for Africa (UBA)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Account Number (10 Digits)</label>
+          <input type="text" id="transfer-acc-num" placeholder="0123456789" maxlength="10" pattern="\d{10}" required />
+        </div>
+
+        <div class="form-group">
+          <label>Receiver Full Name</label>
+          <input type="text" id="transfer-acc-name" placeholder="e.g. John Doe" required />
+        </div>
+
+        <div class="form-group">
+          <label>Amount (₦)</label>
+          <input type="number" id="transfer-amount" placeholder="0.00" min="10" step="any" required />
+        </div>
+
+        <button type="submit" class="btn-primary">Proceed to Authorization</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- PIN Modal -->
+  <div id="pin-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>Authorize Transaction</h3>
+      <p style="font-size:0.83rem; color:var(--text-muted); margin-top:4px;">Enter your 4-digit PIN to confirm</p>
+      
+      <div class="pin-input-container">
+        <input type="password" maxlength="1" class="pin-digit" oninput="focusNextPin(this, 0)" onkeydown="handlePinBackspace(event, 0)" />
+        <input type="password" maxlength="1" class="pin-digit" oninput="focusNextPin(this, 1)" onkeydown="handlePinBackspace(event, 1)" />
+        <input type="password" maxlength="1" class="pin-digit" oninput="focusNextPin(this, 2)" onkeydown="handlePinBackspace(event, 2)" />
+        <input type="password" maxlength="1" class="pin-digit" oninput="focusNextPin(this, 3)" onkeydown="handlePinBackspace(event, 3)" />
+      </div>
+
+      <button type="button" onclick="confirmAndSend()" class="btn-primary">Confirm & Send</button>
+      <button type="button" class="btn-cancel" onclick="closePinModal()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    const TRANSFER_CHARGE = 10.00;
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('jw_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+
+    function loadSavedBeneficiaries() {
+      const saved = JSON.parse(localStorage.getItem('jw_saved_beneficiaries')) || [];
+      const box = document.getElementById('beneficiaries-box');
+      const list = document.getElementById('beneficiaries-list');
+
+      if (saved.length > 0) {
+        list.innerHTML = '';
+        saved.forEach(b => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'chip-btn';
+          btn.innerHTML = `👤 ${b.name} (${b.bank})`;
+          btn.onclick = () => {
+            document.getElementById('transfer-bank').value = b.bank;
+            document.getElementById('transfer-acc-num').value = b.accNum;
+            document.getElementById('transfer-acc-name').value = b.name;
+          };
+          list.appendChild(btn);
+        });
+        box.style.display = 'block';
+      }
+    }
+
+    function initiateTransfer(e) {
+      e.preventDefault();
+      const digits = document.querySelectorAll('.pin-digit');
+      digits.forEach(i => i.value = '');
+      document.getElementById('pin-modal').classList.remove('hidden');
+      setTimeout(() => digits[0].focus(), 100);
+    }
+
+    function closePinModal() {
+      document.getElementById('pin-modal').classList.add('hidden');
+    }
+
+    function focusNextPin(elem, index) {
+      if (elem.value.length >= 1 && index < 3) {
+        document.querySelectorAll('.pin-digit')[index + 1].focus();
+      }
+    }
+
+    function handlePinBackspace(e, index) {
+      if (e.key === 'Backspace' && !e.target.value && index > 0) {
+        document.querySelectorAll('.pin-digit')[index - 1].focus();
+      }
+    }
+
+    function confirmAndSend() {
+      const inputs = document.querySelectorAll('.pin-digit');
+      let pin = "";
+      inputs.forEach(i => pin += i.value);
+
+      if (pin.length < 4) {
+        alert("Please enter a valid 4-digit PIN.");
+        return;
+      }
+
+      closePinModal();
+
+      const bank = document.getElementById('transfer-bank').value;
+      const accNum = document.getElementById('transfer-acc-num').value.trim();
+      const accName = document.getElementById('transfer-acc-name').value.trim();
+      const amount = parseFloat(document.getElementById('transfer-amount').value);
+
+      let currentBalance = parseFloat(localStorage.getItem('jw_user_balance') || "4837400.00");
+      const totalDeduction = amount + TRANSFER_CHARGE;
+
+      if (totalDeduction > currentBalance) {
+        alert("Insufficient balance!");
+        return;
+      }
+
+      currentBalance -= totalDeduction;
+      localStorage.setItem('jw_user_balance', currentBalance);
+
+      // Save transaction history
+      let txs = JSON.parse(localStorage.getItem('jw_transactions_list')) || [];
+      txs.unshift({
+        title: `Transfer to ${accName}`,
+        category: `Transfer · ${bank}`,
+        amount: -totalDeduction,
+        time: 'Just now',
+        avatar: accName.substring(0, 2).toUpperCase(),
+        type: 'negative'
+      });
+      localStorage.setItem('jw_transactions_list', JSON.stringify(txs));
+
+      // Save notification
+      let notifs = JSON.parse(localStorage.getItem('jw_notifications')) || [];
+      notifs.unshift({
+        icon: '✈',
+        title: 'Transfer Sent',
+        message: `Sent ₦${amount.toLocaleString('en-NG', {minimumFractionDigits: 2})} to ${accName}.`,
+        time: 'Just now'
+      });
+      localStorage.setItem('jw_notifications', JSON.stringify(notifs));
+
+      // Save receipt object
+      const reference = `TXN-${Date.now().toString().slice(-8)}-${Math.floor(1000 + Math.random() * 9000)}`;
+      localStorage.setItem('jw_last_transfer', JSON.stringify({
+        bank, accNum, accName, amount, fee: TRANSFER_CHARGE, date: new Date().toLocaleString(), reference
+      }));
+
+      window.location.href = 'transfer-success.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadSavedBeneficiaries();
+    });
+  </script>
+</body>
+</html>

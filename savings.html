@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundeb Wallet - Savings & Growth</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --primary-dark: #0d1527;
+      --accent-green: #10b981;
+      --accent-green-light: #d1fae5;
+      --bg-light: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --danger-red: #ef4444;
+    }
+
+    [data-theme="dark"] {
+      --primary-dark: #0f172a;
+      --accent-green: #10b981;
+      --accent-green-light: rgba(16, 185, 129, 0.2);
+      --bg-light: #0b0f19;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --danger-red: #f87171;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      padding-bottom: 80px;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--text-main);
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-title { font-size: 1.1rem; font-weight: 700; }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .hero-savings-card {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #ffffff;
+      padding: 24px;
+      border-radius: 20px;
+      box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
+    }
+
+    .hero-savings-card h2 { font-size: 1.8rem; font-weight: 800; margin: 8px 0 4px; }
+
+    .card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 18px;
+      border: 1px solid var(--border-color);
+    }
+
+    .savings-goal-item {
+      background: var(--bg-light);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .savings-goal-item:hover {
+      border-color: var(--accent-green);
+      transform: translateY(-2px);
+    }
+
+    .savings-goal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background-color: var(--border-color);
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--accent-green);
+      border-radius: 5px;
+    }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 0.9rem;
+      outline: none;
+      background: var(--bg-light);
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: var(--primary-dark);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .btn-danger {
+      width: 100%;
+      padding: 13px;
+      background: var(--danger-red);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    [data-theme="dark"] .btn-primary { background: var(--accent-green); }
+
+    .btn-secondary {
+      background: var(--border-color);
+      color: var(--text-main);
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .mobile-bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 62px;
+      background-color: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 900;
+    }
+
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 500;
+      gap: 3px;
+    }
+
+    .bottom-nav-item.active { color: var(--text-main); font-weight: 700; }
+    .bottom-nav-item .icon { font-size: 1.25rem; }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <a href="index.html" class="back-btn" aria-label="Go back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    </a>
+    <span class="header-title">Fundeb Savings & Growth</span>
+  </header>
+
+  <main class="container">
+    <div class="hero-savings-card">
+      <span style="font-size:0.85rem; opacity:0.9;">Total Savings Balance</span>
+      <h2 id="total-savings-val">₦0.00</h2>
+      <p style="font-size:0.78rem; opacity:0.9; margin-top:4px;">Earn 12% p.a. interest calculated daily</p>
+    </div>
+
+    <!-- Create Goal Card -->
+    <div class="card">
+      <h3 style="font-size:1rem; margin-bottom:14px;">Create New Savings Goal</h3>
+      <form onsubmit="createNewGoal(event)">
+        <div class="form-group">
+          <label>Target Title</label>
+          <input type="text" id="goal-title" placeholder="e.g. New Laptop" required />
+        </div>
+        <div class="form-group">
+          <label>Target Goal Amount (₦)</label>
+          <input type="number" id="goal-target" placeholder="e.g. 300000" min="1000" required />
+        </div>
+        <div class="form-group">
+          <label>Initial Deposit (₦)</label>
+          <input type="number" id="goal-deposit" placeholder="e.g. 10000" min="100" required />
+        </div>
+        <button type="submit" class="btn-primary">Start Saving</button>
+      </form>
+    </div>
+
+    <!-- Quick Withdraw Card -->
+    <div class="card">
+      <h3 style="font-size:1rem; margin-bottom:14px; color: var(--danger-red);">Withdraw to Main Wallet</h3>
+      <form onsubmit="handleDirectWithdraw(event)">
+        <div class="form-group">
+          <label>Select Savings Goal</label>
+          <select id="withdraw-goal-select" required>
+            <!-- Rendered Dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Withdrawal Amount (₦)</label>
+          <input type="number" id="withdraw-amount" placeholder="e.g. 5000" min="1" required />
+        </div>
+        <button type="submit" class="btn-danger">Withdraw Funds</button>
+      </form>
+    </div>
+
+    <!-- Active Goals Card -->
+    <div class="card">
+      <h3 style="font-size:1rem; margin-bottom:6px;">Your Active Goals</h3>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:14px;">Tap any goal to top up or withdraw funds</p>
+      <div id="goals-container">
+        <!-- Rendered Dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Savings Action Modal -->
+  <div class="modal-overlay" id="action-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-goal-title" style="font-size:1.1rem;">Manage Goal</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Current Saved Amount</span>
+        <h2 id="modal-goal-current" style="color: var(--accent-green); font-size: 1.5rem; margin-top: 2px;">₦0.00</h2>
+      </div>
+
+      <form onsubmit="handleGoalAction(event)">
+        <div class="form-group">
+          <label>Enter Amount (₦)</label>
+          <input type="number" id="action-amount" placeholder="e.g. 5000" min="1" required />
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 18px;">
+          <button type="submit" onclick="setActionType('deposit')" class="btn-primary" style="flex: 1;">+ Deposit</button>
+          <button type="submit" onclick="setActionType('withdraw')" class="btn-secondary" style="background: var(--danger-red); color: #fff;">- Withdraw</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <nav class="mobile-bottom-nav">
+    <a href="index.html" class="bottom-nav-item">
+      <span class="icon">🏠</span><span>Home</span>
+    </a>
+    <a href="transfer.html" class="bottom-nav-item">
+      <span class="icon">✈</span><span>Pay</span>
+    </a>
+    <a href="cards.html" class="bottom-nav-item">
+      <span class="icon">💳</span><span>Cards</span>
+    </a>
+    <a href="savings.html" class="bottom-nav-item active">
+      <span class="icon">💰</span><span>Grow</span>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <span class="icon">👤</span><span>You</span>
+    </a>
+  </nav>
+
+  <script>
+    let activeGoalIndex = null;
+    let selectedActionType = 'deposit';
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('jw_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+
+    function getSavingsGoals() {
+      return JSON.parse(localStorage.getItem('jw_savings_goals')) || [
+        { title: 'House', current: 5000, target: 500000 },
+        { title: 'Rent', current: 10000, target: 200000 }
+      ];
+    }
+
+    function addNotification(title, message, icon = '💰') {
+      const notifs = JSON.parse(localStorage.getItem('jw_notifications')) || [
+        { icon: '✓', title: 'Transfer Successful', message: 'You sent ₦15,000.00 to Ade.', time: '10m ago' },
+        { icon: '🔒', title: 'Security Alert', message: 'New login detected from Mobile App.', time: 'Yesterday' }
+      ];
+      notifs.unshift({ icon, title, message, time: 'Just now' });
+      localStorage.setItem('jw_notifications', JSON.stringify(notifs));
+    }
+
+    function renderSavingsPage() {
+      initTheme();
+      const goals = getSavingsGoals();
+      const container = document.getElementById('goals-container');
+      const selectDropdown = document.getElementById('withdraw-goal-select');
+      
+      container.innerHTML = '';
+      selectDropdown.innerHTML = '';
+
+      let grandTotal = 0;
+
+      if (goals.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:16px; font-size:0.85rem;">No active savings goals found.</p>`;
+        selectDropdown.innerHTML = `<option value="">No savings available</option>`;
+      } else {
+        goals.forEach((goal, idx) => {
+          grandTotal += goal.current;
+          const pct = Math.min(100, Math.round((goal.current / goal.target) * 100));
+
+          // Populate Goal List
+          const html = `
+            <div class="savings-goal-item" onclick="openModal(${idx})">
+              <div class="savings-goal-header">
+                <span>${goal.title}</span>
+                <span style="color:var(--accent-green);">₦${goal.current.toLocaleString('en-NG', {minimumFractionDigits: 2})}</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width:${pct}%;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:var(--text-muted);">
+                <span>Target: ₦${goal.target.toLocaleString()}</span>
+                <span>${pct}% completed</span>
+              </div>
+            </div>
+          `;
+          container.insertAdjacentHTML('beforeend', html);
+
+          // Populate Withdraw Select Dropdown
+          const option = document.createElement('option');
+          option.value = idx;
+          option.textContent = `${goal.title} (₦${goal.current.toLocaleString()})`;
+          selectDropdown.appendChild(option);
+        });
+      }
+
+      document.getElementById('total-savings-val').textContent = `₦${grandTotal.toLocaleString('en-NG', {minimumFractionDigits: 2})}`;
+    }
+
+    function createNewGoal(e) {
+      e.preventDefault();
+      const title = document.getElementById('goal-title').value.trim();
+      const target = parseFloat(document.getElementById('goal-target').value);
+      const deposit = parseFloat(document.getElementById('goal-deposit').value);
+
+      let balance = parseFloat(localStorage.getItem('jw_user_balance') || "4837400");
+      if (deposit > balance) {
+        alert("Insufficient main balance!");
+        return;
+      }
+
+      // Deduct deposit from main balance
+      balance -= deposit;
+      localStorage.setItem('jw_user_balance', balance);
+
+      const goals = getSavingsGoals();
+      goals.push({ title, current: deposit, target });
+      localStorage.setItem('jw_savings_goals', JSON.stringify(goals));
+
+      // Push notification
+      addNotification(
+        'Goal Created',
+        `You created "${title}" and saved ₦${deposit.toLocaleString('en-NG', {minimumFractionDigits: 2})}.`
+      );
+
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 70, spread: 60, origin: { y: 0.3 } });
+      }
+
+      document.getElementById('goal-title').value = '';
+      document.getElementById('goal-target').value = '';
+      document.getElementById('goal-deposit').value = '';
+
+      renderSavingsPage();
+    }
+
+    function handleDirectWithdraw(e) {
+      e.preventDefault();
+      const selectDropdown = document.getElementById('withdraw-goal-select');
+      const goalIndex = selectDropdown.value;
+      const amount = parseFloat(document.getElementById('withdraw-amount').value);
+
+      if (goalIndex === "" || goalIndex === null) {
+        alert("Please select a valid savings goal.");
+        return;
+      }
+
+      if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid withdrawal amount.");
+        return;
+      }
+
+      const goals = getSavingsGoals();
+      let goal = goals[goalIndex];
+      let balance = parseFloat(localStorage.getItem('jw_user_balance') || "4837400");
+
+      if (amount > goal.current) {
+        alert("Withdrawal amount exceeds your active savings for this goal!");
+        return;
+      }
+
+      // Update balances
+      goal.current -= amount;
+      balance += amount;
+
+      addNotification(
+        'Savings Withdrawal',
+        `Withdrew ₦${amount.toLocaleString('en-NG', {minimumFractionDigits: 2})} from "${goal.title}" to main wallet.`,
+        '💸'
+      );
+
+      // Clean up goal if depleted
+      if (goal.current <= 0) {
+        goals.splice(goalIndex, 1);
+      } else {
+        goals[goalIndex] = goal;
+      }
+
+      localStorage.setItem('jw_user_balance', balance);
+      localStorage.setItem('jw_savings_goals', JSON.stringify(goals));
+
+      document.getElementById('withdraw-amount').value = '';
+      alert(`Successfully withdrew ₦${amount.toLocaleString()} to main balance!`);
+      renderSavingsPage();
+    }
+
+    function openModal(index) {
+      activeGoalIndex = index;
+      const goals = getSavingsGoals();
+      const goal = goals[index];
+
+      document.getElementById('modal-goal-title').textContent = goal.title;
+      document.getElementById('modal-goal-current').textContent = `₦${goal.current.toLocaleString('en-NG', {minimumFractionDigits: 2})}`;
+      document.getElementById('action-amount').value = '';
+      document.getElementById('action-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('action-modal').classList.remove('active');
+      activeGoalIndex = null;
+    }
+
+    function setActionType(type) {
+      selectedActionType = type;
+    }
+
+    function handleGoalAction(e) {
+      e.preventDefault();
+      if (activeGoalIndex === null) return;
+
+      const amount = parseFloat(document.getElementById('action-amount').value);
+      if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+      }
+
+      const goals = getSavingsGoals();
+      let goal = goals[activeGoalIndex];
+      let balance = parseFloat(localStorage.getItem('jw_user_balance') || "4837400");
+
+      if (selectedActionType === 'deposit') {
+        if (amount > balance) {
+          alert("Insufficient main balance!");
+          return;
+        }
+
+        // Deduct from main wallet, add to savings
+        balance -= amount;
+        goal.current += amount;
+
+        addNotification(
+          'Savings Top-up',
+          `Added ₦${amount.toLocaleString('en-NG', {minimumFractionDigits: 2})} to "${goal.title}".`
+        );
+
+        if (typeof confetti === 'function') {
+          confetti({ particleCount: 50, spread: 50, origin: { y: 0.4 } });
+        }
+      } else if (selectedActionType === 'withdraw') {
+        if (amount > goal.current) {
+          alert("Amount exceeds active savings balance!");
+          return;
+        }
+
+        // Deduct from savings, credit back to main wallet
+        goal.current -= amount;
+        balance += amount;
+
+        addNotification(
+          'Savings Withdrawal',
+          `Withdrew ₦${amount.toLocaleString('en-NG', {minimumFractionDigits: 2})} from "${goal.title}" to main wallet.`,
+          '💸'
+        );
+      }
+
+      // Cleanup goal if balance reaches zero
+      if (goal.current <= 0) {
+        goals.splice(activeGoalIndex, 1);
+      } else {
+        goals[activeGoalIndex] = goal;
+      }
+
+      // Save updated data to localStorage
+      localStorage.setItem('jw_user_balance', balance);
+      localStorage.setItem('jw_savings_goals', JSON.stringify(goals));
+
+      closeModal();
+      renderSavingsPage();
+    }
+
+    document.addEventListener('DOMContentLoaded', renderSavingsPage);
+  </script>
+</body>
+</html>
